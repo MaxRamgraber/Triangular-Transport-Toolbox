@@ -1,3 +1,7 @@
+"""
+Triangular transport map toolbox v1.0.0
+"""
+
 import numpy as np
 
 class transport_map():
