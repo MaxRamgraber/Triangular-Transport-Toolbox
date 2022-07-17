@@ -2,7 +2,7 @@
 
 <img align="left" src="https://github.com/MaxRamgraber/Triangular-Transport-Toolbox/blob/main/figures/spiral_animated.gif" height="300px">
 
-<div style="text-align: justify ">This repository contains the code for my triangular transport implementation. To use it in your own code, simply download the file `transport_map.py`, copy it into your working directory, import the class `transport_map` into your Python code with the line `from transport_map import *`. That's it!</div>
+<div style="text-align: justify">This repository contains the code for my triangular transport implementation. To use it in your own code, simply download the file `transport_map.py`, copy it into your working directory, import the class `transport_map` into your Python code with the line `from transport_map import *`. That's it!</div>
 
 The practical use and capabilities of this toolbox are illustrated in a number of example files:
 
