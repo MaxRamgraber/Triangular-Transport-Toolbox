@@ -1,3 +1,7 @@
+"""
+Triangular transport map toolbox v1.0.0
+"""
+
 import numpy as np
 
 class transport_map():
@@ -368,12 +372,13 @@ class transport_map():
         # self.adapt_map()
         
     def adapt_map(self, 
-        coeffs          = {}, 
-        maxorder_mon    = 10, 
-        maxorder_nonmon = 10,
-        threshold_sw    = 0.1,
-        threshold_prec  = 0.1,
-        map_finished    = None):
+        coeffs              = {}, 
+        maxorder_mon        = 10, 
+        maxorder_nonmon     = 10,
+        threshold_sw        = 0.1,
+        threshold_prec      = 0.1,
+        sequential_updates  = False,
+        map_finished        = None):
         
         """
         This function implements the adaptive transport map algorithm. It is 
@@ -2250,7 +2255,7 @@ class transport_map():
             # If there is a cross-term key, ignore it.
             if 'cross-terms' in keylist:
                 keylist.remove('cross-terms')
-        
+                
             # Go through all arguments with special terms
             for d in keylist:
                 
@@ -2283,10 +2288,10 @@ class transport_map():
                 elif dictionary[d]['counter'] > 1:
                 
                     # Decide where to place the special terms
-                    quantiles   = np.arange(1,dictionary[d]['counter']+1,1)/(self.special_terms[k][d]['counter']+1)
+                    quantiles   = np.arange(1,dictionary[d]['counter']+1,1)/(dictionary[d]['counter']+1)
                     
                     # Append an empty array, then fill it
-                    scales      = np.zeros(self.special_terms[k][d]['counter'])
+                    scales      = np.zeros(dictionary[d]['counter'])
                     
                     # Determine the centers
                     dictionary[d]['centers'] = copy.copy(
@@ -2346,23 +2351,19 @@ class transport_map():
         # Go through all terms
         for k in K:
             
-            # print(self.special_terms)
-            
-            # Write in the special term locations
-            self.special_terms[k]   = place_special_terms(
-                self,
-                dictionary  = self.special_terms[k])
-            
             # If there are cross-terms, do the same thing
             if 'cross-terms' in list(self.special_terms[k].keys()):
                 
                 # Write in the special term locations
                 self.special_terms[k]['cross-terms']    = place_special_terms(
                     self,
-                    dictionary  = self.special_terms[k]['cross-terms'])
+                    dictionary  = copy.deepcopy(self.special_terms[k]['cross-terms']))
             
-            
-            
+            # Write in the special term locations
+            self.special_terms[k]   = place_special_terms(
+                self,
+                dictionary  = copy.deepcopy(self.special_terms[k]))
+
         # ---------------------------------------------------------------------
         # Prepare linearization thresholds, if linearization is used
         # ---------------------------------------------------------------------
