@@ -42,8 +42,7 @@ class transport_map():
         This toolbox contains functions required to construct, optimize, and 
         evaluate transporth methods.
         
-        Maximilian Ramgraber, July 2022
-        
+        Maximilian Ramgraber, July 2025
         
         Variables:
             
@@ -2567,7 +2566,7 @@ class transport_map():
 
         return result
     
-    def evaluate_pushforward_density(self, Z, log_target_pdf):
+    def evaluate_pushforward_density(self, Z, log_target_pdf, X_star = None):
         
         """
         This function evaluates the pushforward density, that is to say the 
@@ -2577,15 +2576,21 @@ class transport_map():
         Variables:
         
             Z
-                [None or array] : N-by-D array of positions in the reference
-                distribution space at which the pushforward will be evaluated, 
-                where N is the number of samples and D is the number of 
-                dimensions.
+                [array] : N-by-D or N-by-(D-E) array of reference distribution
+                samples to be mapped to the target distribution, where N is the 
+                number of samples, D is the number of target distribution 
+                dimensions, and E the number of pre-specified dimensions (if 
+                X_precalc is specified).
                 
             log_target_pdf
                 [function] : a function which takes as input an N-by-D array of
                 samples X and returns the logarithm of the probability density 
                 of the target pdf for these samples.
+                
+            X_star - [default = None]
+                [None or array] : N-by-E array of samples in the space of the
+                target distribution, used to condition the lower D-E dimensions
+                during the inversion process.
         """
         
         import copy
@@ -2593,17 +2598,20 @@ class transport_map():
         # Make sure the user uses separable monotonicity
         assert self.monotonicity == "separable monotonicity", "evaluate_pushforward_density is currently only implemented for monotonicity = 'separable monotonicity'."
         
-        # Make sure the user trained a full map
-        assert self.skip_dimensions == 0, "evaluate_pushforward_density does currently not support partial triangular maps."
-        
         # Compute the pre-image points
-        X = self.inverse_map(Z)        
+        X = self.inverse_map(Z, X_star)        
         
         # Apply the change-of-variables formula
         # See https://arxiv.org/abs/2503.21673, Eq. 4
         
         # First, evaluate the target densities
         log_target_densities = log_target_pdf(X)
+        
+        # If this is a conditional map, re-create the full target vector
+        if X_star is not None:
+            X =  np.column_stack((
+                X_star,
+                X))
         
         # Now, let us find the determinant of the forward map's Jacobian
         log_determinant = 0
@@ -2625,7 +2633,7 @@ class transport_map():
             # Account for the gradient from the standard scaler
             # If X_std is 2, the non-standardized function got compressed
             # We have to correct for that.
-            dSkdxk /= self.X_std[k]
+            dSkdxk /= self.X_std[k+self.skip_dimensions]
             
             # Add the logarithm of this derivative
             log_determinant += np.log(dSkdxk)
@@ -2633,7 +2641,7 @@ class transport_map():
         # Return the result from the change-of-variables pdf
         return np.exp(log_target_densities - log_determinant)
             
-    def evaluate_pullback_density(self, X):
+    def evaluate_pullback_density(self, X, X_star = None):
         
         """
         This function evaluates the pullback density, that is to say the 
@@ -2655,11 +2663,14 @@ class transport_map():
         # Make sure the user uses separable monotonicity
         assert self.monotonicity == "separable monotonicity", "evaluate_pushforward_density is currently only implemented for monotonicity = 'separable monotonicity'."
         
-        # Make sure the user trained a full map
-        assert self.skip_dimensions == 0, "evaluate_pushforward_density does currently not support partial triangular maps."
+        # If this is a conditional map, re-create the full target vector
+        if X_star is not None:
+            X =  np.column_stack((
+                X_star,
+                X))
         
-        # Compute the pre-image points
-        Z = self.map(X)        
+        # Compute the image points
+        Z = self.map(X)
         
         # Apply the change-of-variables formula
         # See https://arxiv.org/abs/2503.21673, Eq. 4
