@@ -2585,7 +2585,9 @@ class transport_map():
             log_target_pdf
                 [function] : a function which takes as input an N-by-D array of
                 samples X and returns the logarithm of the probability density 
-                of the target pdf for these samples.
+                of the target pdf for these samples. If the triangular map is 
+                only partially defined (i.e., self.skip_dimensions != 0), this
+                function should return the conditional log density instead.
                 
             X_star - [default = None]
                 [None or array] : N-by-E array of samples in the space of the
