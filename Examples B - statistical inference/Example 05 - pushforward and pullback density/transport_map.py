@@ -1261,8 +1261,6 @@ class transport_map():
                 
         return string, modifier_log
         
-    
-
     def function_constructor_alternative(self, k = None):
         
         """
@@ -2135,8 +2133,7 @@ class transport_map():
             exec("self.der_fun_mon.append(copy.deepcopy("+funstring+"))")
                 
         return
-    
-    
+      
     def check_for_special_terms(self):
         
         """
@@ -2391,8 +2388,7 @@ class transport_map():
                     self.linearization_threshold[k,1] = +self.linearization
                 
         return
-    
-            
+               
     def map(self,X = None):
         
         """
@@ -2570,6 +2566,137 @@ class transport_map():
         result  = copy.copy(nonmonotone_part + monotone_part)
 
         return result
+    
+    def evaluate_pushforward_density(self, Z, log_target_pdf):
+        
+        """
+        This function evaluates the pushforward density, that is to say the 
+        map's approximation to the standard Gaussian reference. Currently only
+        implemented for 'separable monotonicity'.
+        
+        Variables:
+        
+            Z
+                [None or array] : N-by-D array of positions in the reference
+                distribution space at which the pushforward will be evaluated, 
+                where N is the number of samples and D is the number of 
+                dimensions.
+                
+            log_target_pdf
+                [function] : a function which takes as input an N-by-D array of
+                samples X and returns the logarithm of the probability density 
+                of the target pdf for these samples.
+        """
+        
+        import copy
+        
+        # Make sure the user uses separable monotonicity
+        assert self.monotonicity == "separable monotonicity", "evaluate_pushforward_density is currently only implemented for monotonicity = 'separable monotonicity'."
+        
+        # Make sure the user trained a full map
+        assert self.skip_dimensions == 0, "evaluate_pushforward_density does currently not support partial triangular maps."
+        
+        # Compute the pre-image points
+        X = self.inverse_map(Z)        
+        
+        # Apply the change-of-variables formula
+        # See https://arxiv.org/abs/2503.21673, Eq. 4
+        
+        # First, evaluate the target densities
+        log_target_densities = log_target_pdf(X)
+        
+        # Now, let us find the determinant of the forward map's Jacobian
+        log_determinant = 0
+        for k in range(self.D):
+            
+            # Extract the monotone coefficients
+            coeffs_mon      = copy.copy(self.coeffs_mon[k])
+                
+            # Evaluate the derivative of the monotone part wrt x_k of the k-th
+            # map component function.
+            der_Psi_mon = copy.copy(self.der_fun_mon[k](copy.copy(X),self))
+            
+            # Compute the derivatives of this map component function wrt the 
+            # last variable x_k
+            dSkdxk = np.dot(
+                der_Psi_mon,
+                coeffs_mon[:,np.newaxis])[:,0]
+            
+            # Account for the gradient from the standard scaler
+            # If X_std is 2, the non-standardized function got compressed
+            # We have to correct for that.
+            dSkdxk /= self.X_std[k]
+            
+            # Add the logarithm of this derivative
+            log_determinant += np.log(dSkdxk)
+            
+        # Return the result from the change-of-variables pdf
+        return np.exp(log_target_densities - log_determinant)
+            
+    def evaluate_pullback_density(self, X):
+        
+        """
+        This function evaluates the pullback density, that is to say the 
+        map's approximation to the target density. Currently only implemented 
+        for 'separable monotonicity'.
+        
+        Variables:
+        
+            X
+                [None or array] : N-by-D array of positions in the target
+                distribution space at which the pullback will be evaluated, 
+                where N is the number of samples and D is the number of 
+                dimensions.
+        """
+        
+        import copy
+        import scipy.stats
+        
+        # Make sure the user uses separable monotonicity
+        assert self.monotonicity == "separable monotonicity", "evaluate_pushforward_density is currently only implemented for monotonicity = 'separable monotonicity'."
+        
+        # Make sure the user trained a full map
+        assert self.skip_dimensions == 0, "evaluate_pushforward_density does currently not support partial triangular maps."
+        
+        # Compute the pre-image points
+        Z = self.map(X)        
+        
+        # Apply the change-of-variables formula
+        # See https://arxiv.org/abs/2503.21673, Eq. 4
+        
+        # First, evaluate the target densities
+        log_reference_densities = scipy.stats.multivariate_normal.logpdf(
+            Z,
+            mean = np.zeros(self.D),
+            cov = np.identity(self.D))
+        
+        # Now, let us find the determinant of the forward map's Jacobian
+        log_determinant = 0
+        for k in range(self.D):
+            
+            # Extract the monotone coefficients
+            coeffs_mon      = copy.copy(self.coeffs_mon[k])
+                
+            # Evaluate the derivative of the monotone part wrt x_k of the k-th
+            # map component function.
+            der_Psi_mon = copy.copy(self.der_fun_mon[k](copy.copy(X),self))
+            
+            # Compute the derivatives of this map component function wrt the 
+            # last variable x_k
+            dSkdxk = np.dot(
+                der_Psi_mon,
+                coeffs_mon[:,np.newaxis])[:,0]
+            
+            # Account for the gradient from the standard scaler
+            # If X_std is 2, the non-standardized function got compressed
+            # We have to correct for that.
+            dSkdxk /= self.X_std[k]
+            
+            # Add the logarithm of this derivative
+            log_determinant += np.log(dSkdxk)
+            
+        # Return the result from the change-of-variables pdf
+        return np.exp(log_reference_densities + log_determinant)
     
     def optimize(self, K = None):
         
@@ -2759,8 +2886,7 @@ class transport_map():
                 exec("self.der_fun_mon.append(copy.deepcopy("+funstring+"))")
     
         return
-    
-    
+      
     def worker_task_monotone(self,k,task_supervisor):
         
         """
