@@ -136,6 +136,8 @@ tm     = transport_map(
 # Optimize the map
 tm.optimize()
 
+#%%
+
 # =============================================================================
 # Step 2: Evaluate the pushforward and pullback densities
 # =============================================================================
@@ -304,3 +306,127 @@ plt.title("Pullback samples and pullback pdf")
 
 plt.savefig('pullback_density.pdf',dpi=600,bbox_inches='tight')
 plt.savefig('pullback_density.png',dpi=600,bbox_inches='tight')
+
+#%%
+
+# =============================================================================
+# Step 4: Try to build a conditional map
+# =============================================================================
+
+# Delete any map object which might already exist
+if "tm" in globals():
+    del tm
+
+# Parameterize the transport map
+tm     = transport_map(
+    monotone                = monotone[1:],
+    nonmonotone             = nonmonotone[1:],
+    X                       = copy.copy(X),         # Training ensemble
+    polynomial_type         = "hermite function",   # We use Hermite functions for stability
+    monotonicity            = "separable monotonicity", # Because we have cross-terms, we require the integrated rectifier formulation
+    standardize_samples     = True,                 # Standardize X before training
+    workers                 = 1,                    # Number of workers for the parallel optimization; 1 is not parallel
+    quadrature_input        = {                     # Keywords for the Gaussian quadrature used for integration
+        'order'         : 25,       # If the map is bad, increase this number; takes more computational effort
+        'adaptive'      : False,
+        'threshold'     : 1E-9,
+        'verbose'       : False,
+        'increment'     : 6})
+
+# Optimize the map
+tm.optimize()
+
+#%%
+
+# =============================================================================
+# Step 4.1: Evaluate and plot the conditional pushforward densities
+# =============================================================================
+
+# Let's just condition on the value "1"
+X_star          = np.ones((101,1))
+
+# Define a dummy function for the conditional wavy distribution
+# Here, we hard_code in the X_star value
+conditional_density_wavy_distribution = lambda x: density_wavy_distribution(np.column_stack((X_star,x)))
+
+# Evaluate the conditional pushforward density
+conditional_pushforward_density = tm.evaluate_pushforward_density(
+    Z               = np.linspace(-3,3,101)[:,np.newaxis], 
+    X_star          = X_star,
+    log_target_pdf  = conditional_density_wavy_distribution)
+
+# Plot the results
+plt.figure()
+
+ax = plt.gca()
+
+ax.plot(
+    np.linspace(-3,3,101),
+    scipy.stats.norm.pdf(np.linspace(-3,3,101)),
+    color = "xkcd:dark grey",
+    label = "conditional reference pdf")
+
+ax.set_ylabel("probability density reference")
+
+ax2 = ax.twinx()
+
+ax2.plot(
+    np.linspace(-3,3,101),
+    conditional_pushforward_density,
+    color = "xkcd:orangish red",
+    label = "conditional pushforward pdf",
+    ls = "--")
+
+ax2.set_ylabel("probability density pushforward")
+
+ax.set_xlabel("$x_{2}$")
+
+# Create a shared legend
+lines, labels = ax.get_legend_handles_labels()
+lines2, labels2 = ax2.get_legend_handles_labels()
+ax2.legend(lines + lines2, labels + labels2, loc=0)
+
+plt.savefig('conditional_pushforward_density.pdf',dpi=600,bbox_inches='tight')
+plt.savefig('conditional_pushforward_density.png',dpi=600,bbox_inches='tight')
+
+# =============================================================================
+# Step 4.2: Evaluate the pullback densities
+# =============================================================================
+
+# Evaluate the conditional pullback density
+conditional_pullback_density = tm.evaluate_pullback_density(
+    X               = np.linspace(-3,3,101)[:,np.newaxis], 
+    X_star          = X_star)
+
+plt.figure()
+
+ax = plt.gca()
+
+ax.plot(
+    np.linspace(-3,3,101),
+    np.exp(density_wavy_distribution(np.column_stack((X_star,np.linspace(-3,3,101)[:,np.newaxis])))),
+    color = "xkcd:dark grey",
+    label = "unnormalized conditional target pdf")
+
+ax.set_ylabel("conditional probability density target pdf")
+
+ax2 = ax.twinx()
+
+ax2.plot(
+    np.linspace(-3,3,101),
+    conditional_pullback_density,
+    color = "xkcd:orangish red",
+    label = "conditional pullback pdf",
+    ls = "--")
+
+ax2.set_ylabel("probability density pushforward")
+
+ax.set_xlabel("$x_{2}$")
+
+# Create a shared legend
+lines, labels = ax.get_legend_handles_labels()
+lines2, labels2 = ax2.get_legend_handles_labels()
+ax2.legend(lines + lines2, labels + labels2, loc=0)
+
+plt.savefig('conditional_pullback_density.pdf',dpi=600,bbox_inches='tight')
+plt.savefig('conditional_pullback_density.png',dpi=600,bbox_inches='tight')
