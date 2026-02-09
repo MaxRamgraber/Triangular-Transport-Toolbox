@@ -74,7 +74,7 @@ if __name__ == '__main__':
     synthetic_truth     = synthetic_truth[:,0,:]
         
     # Create observations
-    observations        = copy.copy(synthetic_truth) + scipy.stats.norm.rvs(scale = obs_sd, size = synthetic_truth.shape)
+    observations        = synthetic_truth + scipy.stats.norm.rvs(scale = obs_sd, size = synthetic_truth.shape)
         
     #%%
     """

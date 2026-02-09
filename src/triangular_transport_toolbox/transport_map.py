@@ -2,13 +2,10 @@
 Triangular transport map toolbox v1.0.0
 """
 
+import copy
 import numpy as np
 
 class transport_map():
-    
-    import numpy as np
-    import copy
-    
     def __init__(self, 
         X, 
         monotone                = None, 
@@ -166,11 +163,6 @@ class transport_map():
                 monotonicity = 'integrated rectifier'.
                 
         """
-        
-        
-        import numpy as np
-        import copy
-        
         # ---------------------------------------------------------------------
         # Load in pre-defined variables
         # ---------------------------------------------------------------------
@@ -404,10 +396,7 @@ class transport_map():
         # =====================================================================
 
         if self.adaptation_map_type == 'separable':
-            
-            import numpy as np
             import scipy.stats
-            import copy
             
             # Initiate monotone and nonmonotone terms
             nonmonotone = [[[]] for x in np.arange(self.D)]
@@ -721,9 +710,6 @@ class transport_map():
                 the transport map, where N is the number of samples and D is 
                 the number of dimensions
         """
-        
-        import copy
-        
         if len(X.shape) != 2:
             raise Exception('X should be a two-dimensional array of shape (N,D), N = number of samples, D = number of dimensions. Current shape of X is '+str(X.shape))
         
@@ -760,8 +746,6 @@ class transport_map():
         internal computations.
         """
         
-        import numpy as np
-        
         # In 'standard' mode, samples are standardized via their mean and 
         # marginal standard deviations
         if self.standardization.lower() == 'standard':
@@ -793,9 +777,6 @@ class transport_map():
         the samples provided. These matrices can be used to optimize the maps
         more quickly.
         """
-        
-        import copy
-        
         # Precalculate locations of any special terms
         self.determine_special_term_locations()
         
@@ -846,22 +827,19 @@ class transport_map():
                 samples the 'term' corresponds to. Used to clarify with respect
                 to what variable we take the derivative.
         """
-        
-        import copy
-        
         # First, check for input errors ---------------------------------------
         
         # Check if mode is valid
         if mode not in ['standard','derivative']:
-            raise ValueError("Mode must be either 'standard' or 'derivative'. Unrecognized mode: "+str(mode))
+            raise ValueError(f"Mode must be either 'standard' or 'derivative'. Unrecognized mode: {mode}")
                 
         # If derivative, check if k is specified
         if mode == 'derivative' and k is None:
-            raise ValueError("If mode == 'derivative', specify an integer for k to inform with regards to which variable we take the derivative. Currently specified: k = "+str(k))
+            raise ValueError(f"If mode == 'derivative', specify an integer for k to inform with regards to which variable we take the derivative. Currently specified: k = {k}")
 
         # If derivative, check if k is an integer
         if mode == 'derivative' and type(k) is not int:
-            raise ValueError("If mode == 'derivative', specify an integer for k to inform with regards to which variable we take the derivative. Currently specified: k = "+str(k))
+            raise ValueError(f"If mode == 'derivative', specify an integer for k to inform with regards to which variable we take the derivative. Currently specified: k = {k}")
 
         # Initiate the modifier log -------------------------------------------
 
@@ -921,7 +899,7 @@ class transport_map():
                     # https://www.wolframalpha.com/input/?i=%28%28x+-+%5Cmu%29*%281-erf%28%28x+-+%5Cmu%29%2F%28sqrt%282%29*%5Csigma%29%29%29+-+%5Csigma*sqrt%282%2F%5Cpi%29*exp%28-%28%28x+-+%5Cmu%29%2F%28sqrt%282%29*%5Csigma%29%29%5E2%29%29%2F2
                     
                     # Construct the string
-                    string      = "((__x__[...,"+i+"] - __mu__)*(1-scipy.special.erf((__x__[...,"+i+"] - __mu__)/(np.sqrt(2)*__scale__))) - __scale__*np.sqrt(2/np.pi)*np.exp(-((__x__[...,"+i+"] - __mu__)/(np.sqrt(2)*__scale__))**2))/2"
+                    string      = f"((__x__[...,{i}] - __mu__)*(1-scipy.special.erf((__x__[...,{i}] - __mu__)/(np.sqrt(2)*__scale__))) - __scale__*np.sqrt(2/np.pi)*np.exp(-((__x__[...,{i}] - __mu__)/(np.sqrt(2)*__scale__))**2))/2"
                     
                 elif mode == 'derivative':
                     
@@ -930,7 +908,7 @@ class transport_map():
                     # Construct the string
                     if int(i) == k:
                         
-                        string      = "(1 - scipy.special.erf((__x__[...,"+i+"] - __mu__)/(np.sqrt(2)*__scale__)))/2"
+                        string      = f"(1 - scipy.special.erf((__x__[...,{i}] - __mu__)/(np.sqrt(2)*__scale__)))/2"
                         
                     else:
                         
@@ -947,7 +925,7 @@ class transport_map():
                     # https://www.wolframalpha.com/input/?i=%28%28x+-+%5Cmu%29*%281%2Berf%28%28x+-+%5Cmu%29%2F%28sqrt%282%29*%5Csigma%29%29%29+%2B+%5Csigma*sqrt%282%2F%5Cpi%29*exp%28-%28%28x+-+%5Cmu%29%2F%28sqrt%282%29*%5Csigma%29%29%5E2%29%29%2F2
                     
                     # Construct the string
-                    string      = "((__x__[...,"+i+"] - __mu__)*(1+scipy.special.erf((__x__[...,"+i+"] - __mu__)/(np.sqrt(2)*__scale__))) + __scale__*np.sqrt(2/np.pi)*np.exp(-((__x__[...,"+i+"] - __mu__)/(np.sqrt(2)*__scale__))**2))/2"
+                    string      = f"((__x__[...,{i}] - __mu__)*(1+scipy.special.erf((__x__[...,{i}] - __mu__)/(np.sqrt(2)*__scale__))) + __scale__*np.sqrt(2/np.pi)*np.exp(-((__x__[...,{i}] - __mu__)/(np.sqrt(2)*__scale__))**2))/2"
                     
                 elif mode == 'derivative':
                     
@@ -956,7 +934,7 @@ class transport_map():
                     # Construct the string
                     if int(i) == k:
                     
-                        string      = "(1 + scipy.special.erf((__x__[...,"+i+"] - __mu__)/(np.sqrt(2)*__scale__)))/2"
+                        string      = f"(1 + scipy.special.erf((__x__[...,{i}] - __mu__)/(np.sqrt(2)*__scale__)))/2"
                     
                     else:
                         
@@ -973,7 +951,7 @@ class transport_map():
                     # https://www.wolframalpha.com/input/?i=1%2F%28sqrt%282*%5Cpi%29*%5Csigma%29*exp%28-%28x+-+%5Cmu%29**2%2F%282*%5Csigma%5E2%29%29
                     
                     # Construct the string
-                    string      = "np.exp(-((__x__[...,"+i+"] - __mu__)/__scale__)**2/2)/(__scale__*np.sqrt(2*np.pi))"
+                    string      = f"np.exp(-((__x__[...,{i}] - __mu__)/__scale__)**2/2)/(__scale__*np.sqrt(2*np.pi))"
                     
                 elif mode == 'derivative':
                     
@@ -982,7 +960,7 @@ class transport_map():
                     # Construct the string
                     if int(i) == k:
                         
-                        string      = "-(__x__[...,"+i+"] - __mu__)/(np.sqrt(2*np.pi)*__scale__**3)*np.exp(-((__x__[...,"+i+"]-__mu__)/__scale__)**2/2)"
+                        string      = f"-(__x__[...,{i}] - __mu__)/(np.sqrt(2*np.pi)*__scale__**3)*np.exp(-((__x__[...,{i}]-__mu__)/__scale__)**2/2)"
                         
                     else:
                         
@@ -999,7 +977,7 @@ class transport_map():
                     # https://www.wolframalpha.com/input/?i=%281+%2B+erf%28%28x+-+%5Cmu%29%2F%28sqrt%282%29*%5Csigma%29%29%29%2F2
                     
                     # Construct the string
-                    string      = "(1 + scipy.special.erf((__x__[...,"+i+"] - __mu__)/(np.sqrt(2)*__scale__)))/2"
+                    string      = f"(1 + scipy.special.erf((__x__[...,{i}] - __mu__)/(np.sqrt(2)*__scale__)))/2"
                     
     
                 elif mode == 'derivative':
@@ -1009,7 +987,7 @@ class transport_map():
                     # Construct the string
                     if int(i) == k:
                         
-                        string      = "1/(np.sqrt(2*np.pi)*__scale__)*np.exp(-(__x__[...,"+i+"] - __mu__)**2/(2*__scale__**2))"
+                        string      = f"1/(np.sqrt(2*np.pi)*__scale__)*np.exp(-(__x__[...,{i}] - __mu__)**2/(2*__scale__**2))"
                     
                     else:
                         
@@ -1021,9 +999,7 @@ class transport_map():
                 
             else:
                 
-                raise ValueError("Special term '"+str(STtype)+"' not "+\
-                    "understood. Currently, only LET, RET, iRBF, and RBF "+\
-                    "are implemented.")
+                raise ValueError(f"Special term '{STtype}' not understood. Currently, only LET, RET, iRBF, and RBF are implemented.")
             
             
         # =====================================================================
@@ -1115,7 +1091,7 @@ class transport_map():
                 if mode == 'standard' or (mode == 'derivative' and ui[i] != k):
                     
                     # Create a variable key
-                    key     = "P_"+str(ui[i])+"_O_"+str(ct[i])
+                    key     = f"P_{ui[i]}_O_{ct[i]}"
                     if hermite_function_modifier:
                         key     += "_HF"
                     if linearize:
@@ -1141,13 +1117,13 @@ class transport_map():
                     
                     # Add variable --------------------------------------------
                     
-                    var         += "(__x__[...,"+str(ui[i])+"])"
+                    var         += f"(__x__[...,{ui[i]}])"
                     
                     # Add Hermite function ------------------------------------
                     
                     if hermite_function_modifier:
                     
-                        var         += "*np.exp(-__x__[...,"+str(ui[i])+"]**2/4)"
+                        var         += f"*np.exp(-__x__[...,{ui[i]}]**2/4)"
                         
                     # Save the variable ---------------------------------------
                     if key not in list(modifier_log["variables"].keys()):
@@ -1166,10 +1142,10 @@ class transport_map():
                 elif mode == 'derivative':
                     
                     # Create a variable key for the standard polynomial
-                    key     = "P_"+str(ui[i])+"_O_"+str(ct[i])
+                    key     = f"P_{ui[i]}_O_{ct[i]}"
                     
                     # Create a variable key for its derivative
-                    keyder  = "P_"+str(ui[i])+"_O_"+str(ct[i])+"_DER"
+                    keyder  = f"P_{ui[i]}_O_{ct[i]}_DER"
                     
                     
                     # Set up function -----------------------------------------
@@ -1195,7 +1171,7 @@ class transport_map():
                     
                     # Add variable --------------------------------------------
                 
-                    varder      += "(__x__[...,"+str(ui[i])+"])"
+                    varder      += f"(__x__[...,{ui[i]}])"
                     
                     # Save the variable ---------------------------------------
                     if keyder not in list(modifier_log["variables"].keys()):
@@ -1234,7 +1210,7 @@ class transport_map():
                         
                         # Add variable ----------------------------------------
                     
-                        varbase     += "(__x__[...,"+str(ui[i])+"])"
+                        varbase     += f"(__x__[...,{ui[i]}])"
                         
                         # Save the variable -----------------------------------
                         if key not in list(modifier_log["variables"].keys()):
@@ -1242,7 +1218,7 @@ class transport_map():
                         
                         # Now we can construct the actual derivative ----------
                         
-                        string      = "-1/2*np.exp(-__x__[...,"+str(ui[i])+"]**2/4)*(__x__[...,"+str(ui[i])+"]*"+key+" - 2*"+keyder+")"
+                        string      = f"-1/2*np.exp(-__x__[...,{ui[i]}]**2/4)*(__x__[...,{ui[i]}]*{key} - 2*{keyder})"
                     
                     # Add a multiplier, in case there are more terms ----------
                     string      += " * "
@@ -1273,9 +1249,6 @@ class transport_map():
                 samples the 'term' corresponds to. Used to clarify with respect
                 to what dimension we build this basis function
         """
-        
-        import numpy as np
-        import copy
         
         if k is None:
             
@@ -1865,9 +1838,6 @@ class transport_map():
         It constructs the functions' strings, then converts them into 
         functions.
         """
-    
-        import numpy as np
-        import copy
         
         self.der_fun_mon            = []
         self.der_fun_mon_strings    = []
@@ -2235,9 +2205,6 @@ class transport_map():
                 samples the 'term' corresponds to. Used to clarify with respect
                 to what dimension we build this basis function
         """
-        
-        import copy
-        
         def place_special_terms(self,dictionary):
             
             """
@@ -2402,10 +2369,6 @@ class transport_map():
                 optimize the transport map, where N is the number of samples 
                 and D is the number of dimensions.
         """
-        
-        import numpy as np
-        import copy
-        
         # If we have specified 
         if X is not None and self.standardize_samples:
             
@@ -2465,10 +2428,6 @@ class transport_map():
                 not depend on x_k. This vector is replaced from storage if it 
                 is not overwritten.
         """
-        
-        import numpy as np
-        import copy
-        
         # Load in values if required
         if x is None:
             
@@ -2594,9 +2553,6 @@ class transport_map():
                 target distribution, used to condition the lower D-E dimensions
                 during the inversion process.
         """
-        
-        import copy
-        
         # Make sure the user uses separable monotonicity
         assert self.monotonicity == "separable monotonicity", "evaluate_pushforward_density is currently only implemented for monotonicity = 'separable monotonicity'."
         
@@ -2658,8 +2614,6 @@ class transport_map():
                 where N is the number of samples and D is the number of 
                 dimensions.
         """
-        
-        import copy
         import scipy.stats
         
         # Make sure the user uses separable monotonicity
@@ -2726,10 +2680,6 @@ class transport_map():
                 optimizes all map component functions.
         
         """
-        
-        import numpy as np
-        import copy
-        
         # If we haven't specified which components should be optimized, then
         # we optimize all components
         if K is None:
@@ -2920,10 +2870,7 @@ class transport_map():
                 not be specified by the user, it only serves to provide 
                 information about the optimization progress.
         """
-        
-        import numpy as np
         from scipy.optimize import minimize
-        import copy
         
         # -----------------------------------------------------------------
         # Prepare task
@@ -3191,9 +3138,7 @@ class transport_map():
                 not be specified by the user, it only serves to provide 
                 information about the optimization progress.
         """
-        
         from scipy.optimize import minimize
-        import copy
         
         # -----------------------------------------------------------------
         # Prepare task
@@ -3318,9 +3263,6 @@ class transport_map():
                 [integer] : an integer specifying where the cutoff between the
                 nonmonotone and monotone coefficients in 'coeffs' is.
         """
-        
-        import numpy as np
-        import copy
         import scipy.special
         
         # Partition the coefficient vector, if necessary
@@ -3453,10 +3395,6 @@ class transport_map():
                 [integer] : an integer specifying where the cutoff between the
                 nonmonotone and monotone coefficients in 'coeffs' is.
         """
-        
-        import numpy as np
-        import copy
-        
         # Partition the coefficient vector, if necessary
         if coeffs is not None:
             # Separate the vector into nonmonotone and monotone coefficients
@@ -3661,10 +3599,6 @@ class transport_map():
                 target distribution, used to condition the lower D-E dimensions
                 during the inversion process.
         """
-        
-        import numpy as np
-        import copy
-        
         # Create a local copy of Z to prevent overwriting the input
         Z   = copy.copy(Z)
         
@@ -3833,9 +3767,6 @@ class transport_map():
                 algorithm should the root not lie within.                
                 
         """
-        
-        import numpy as np
-        import copy
         import pickle
         
         # Extract number of particles
@@ -4024,9 +3955,6 @@ class transport_map():
                 algorithm should the root not lie within.                
                 
         """
-        
-        import numpy as np
-        import copy
         from scipy.interpolate import interp1d
         
         # Create a local copy
@@ -4159,10 +4087,6 @@ class transport_map():
                 (False).
                 
         """
-        
-        import numpy as np
-        import copy
-        
         # =========================================================================
         # Here the actual magic starts
         # =========================================================================
@@ -4366,9 +4290,6 @@ class transport_map():
         return result
     
     def projectedNewton(self, x0, fun, args = None, method = 'trueHessian', rtol_Jdef = 1E-6, rtol_gdef = 1E-6, itmaxdef = 30, epsilon = 0.01):
-        
-        import copy
-        import numpy as np
         import scipy
         
         def Armijo(xk, gk, pk, Jk, Ik, fun, args = None, itmax = 15, sigma = 1E-4, beta = 2):
@@ -4381,9 +4302,6 @@ class transport_map():
             J       : objective function
             Ik      : set of locally optimal coordinates on the boundary
             """
-            
-            import numpy as np
-            
             # Iteration counter
             it  = 0
             
@@ -4426,9 +4344,6 @@ class transport_map():
             return alpha
             
         def projectGradient(xk,gk):
-            
-            import numpy as np
-            
             Pgk     = gk
             Pgk[np.where(np.logical_and(xk == 0, gk >= 0))] = 0
             
@@ -4578,8 +4493,6 @@ class transport_map():
         This function adapts a map with cross-terms.
         
         """
-        
-        import copy
         from scipy.optimize import minimize
             
         def cell_to_term(cell):
